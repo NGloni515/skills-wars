@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://heroes/gaff/hook_chain.gd" id="1_chain"]
+[ext_resource type="PackedScene" path="res://heroes/gaff/hook.glb" id="2_hook"]
+
+[node name="HookChain" type="Node3D"]
+script = ExtResource("1_chain")
+
+[node name="Head" parent="." instance=ExtResource("2_hook")]
+
+[node name="Links" type="MultiMeshInstance3D" parent="."]

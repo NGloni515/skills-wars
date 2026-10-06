@@ -1,0 +1,6 @@
+.DS_Store
+.godot/
+*.blend1
+/game/build/
+/build/
+/third_party/

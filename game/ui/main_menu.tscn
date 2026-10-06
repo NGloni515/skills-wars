@@ -1,0 +1,153 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://ui/main_menu.gd" id="1_menu"]
+
+[sub_resource type="Gradient" id="Gradient_bg"]
+colors = PackedColorArray(0.25, 0.74, 0.93, 1, 0.06, 0.3, 0.6, 1)
+
+[sub_resource type="GradientTexture2D" id="Texture_bg"]
+gradient = SubResource("Gradient_bg")
+fill = 1
+fill_from = Vector2(0.5, 0.3)
+fill_to = Vector2(1.1, 1.1)
+
+[sub_resource type="LabelSettings" id="Label_title"]
+font_size = 76
+outline_size = 18
+outline_color = Color(0.05, 0.1, 0.25, 1)
+
+[sub_resource type="LabelSettings" id="Label_small"]
+font_size = 22
+outline_size = 6
+outline_color = Color(0.05, 0.1, 0.25, 1)
+
+[sub_resource type="LabelSettings" id="Label_section"]
+font_size = 24
+font_color = Color(1, 0.9, 0.55, 1)
+outline_size = 6
+outline_color = Color(0.05, 0.1, 0.25, 1)
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("Texture_bg")
+expand_mode = 1
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Columns" type="HBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 48
+
+[node name="Main" type="VBoxContainer" parent="Center/Columns"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Center/Columns/Main"]
+layout_mode = 2
+text = "SKILLS WARS"
+label_settings = SubResource("Label_title")
+horizontal_alignment = 1
+
+[node name="PlayerName" type="LineEdit" parent="Center/Columns/Main"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(440, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+placeholder_text = "Your name"
+max_length = 16
+alignment = 1
+
+[node name="Practice" type="Button" parent="Center/Columns/Main"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(440, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Practice vs bots"
+
+[node name="Host" type="Button" parent="Center/Columns/Main"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(440, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Host a game"
+
+[node name="FillBots" type="CheckBox" parent="Center/Columns/Main"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+button_pressed = true
+text = "Fill empty slots with bots"
+
+[node name="Status" type="Label" parent="Center/Columns/Main"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(440, 36)
+layout_mode = 2
+label_settings = SubResource("Label_small")
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Join" type="VBoxContainer" parent="Center/Columns"]
+custom_minimum_size = Vector2(440, 0)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="LanTitle" type="Label" parent="Center/Columns/Join"]
+layout_mode = 2
+text = "Games on your Wi-Fi"
+label_settings = SubResource("Label_section")
+
+[node name="Searching" type="Label" parent="Center/Columns/Join"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Searching…"
+label_settings = SubResource("Label_small")
+
+[node name="LanGames" type="VBoxContainer" parent="Center/Columns/Join"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ManualTitle" type="Label" parent="Center/Columns/Join"]
+layout_mode = 2
+text = "Join by address"
+label_settings = SubResource("Label_section")
+
+[node name="JoinRow" type="HBoxContainer" parent="Center/Columns/Join"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Address" type="LineEdit" parent="Center/Columns/Join/JoinRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+placeholder_text = "e.g. 192.168.1.20"
+virtual_keyboard_type = 6
+
+[node name="Join" type="Button" parent="Center/Columns/Join/JoinRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Join"

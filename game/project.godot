@@ -1,0 +1,53 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Skills Wars"
+run/main_scene="res://ui/main_menu.tscn"
+config/features=PackedStringArray("4.7", "Mobile")
+config/icon="res://icon.png"
+
+[autoload]
+
+Net="*res://net/net.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
+
+[importer_defaults]
+
+scene={
+"import_script/path": "res://shared/import/toon_post_import.gd"
+}
+texture={
+"process/size_limit": 1024
+}
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[layer_names]
+
+3d_physics/layer_1="terrain"
+3d_physics/layer_2="hero_walls"
+3d_physics/layer_3="hook_walls"
+3d_physics/layer_4="heroes"
+
+[rendering]
+
+renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true

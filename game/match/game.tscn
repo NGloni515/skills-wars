@@ -1,0 +1,179 @@
+[gd_scene load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://match/game.gd" id="1_game"]
+[ext_resource type="PackedScene" path="res://maps/river_arena/river_arena.tscn" id="2_map"]
+[ext_resource type="Script" path="res://match/match_controller.gd" id="3_match"]
+[ext_resource type="Script" path="res://match/match_view.gd" id="4_view"]
+[ext_resource type="Script" path="res://ui/aim_button.gd" id="5_aim"]
+[ext_resource type="Resource" path="res://match/default_rules.tres" id="6_rules"]
+[ext_resource type="Script" path="res://ui/kill_feed.gd" id="7_feed"]
+[ext_resource type="PackedScene" path="res://ui/shop_panel.tscn" id="8_shop"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_aim"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 1, 1, 0.35)
+
+[sub_resource type="PlaneMesh" id="Mesh_aim"]
+material = SubResource("Mat_aim")
+size = Vector2(0.3, 1)
+
+[sub_resource type="LabelSettings" id="Label_small"]
+font_size = 22
+outline_size = 6
+outline_color = Color(0, 0, 0, 0.7)
+
+[sub_resource type="LabelSettings" id="Label_gold"]
+font_size = 26
+font_color = Color(1, 0.82, 0.3, 1)
+outline_size = 8
+outline_color = Color(0.1, 0.06, 0, 0.85)
+
+[sub_resource type="LabelSettings" id="Label_banner"]
+font_size = 96
+outline_size = 22
+outline_color = Color(0.05, 0.05, 0.12, 1)
+
+[sub_resource type="LabelSettings" id="Label_banner_sub"]
+font_size = 30
+outline_size = 8
+outline_color = Color(0.05, 0.05, 0.12, 1)
+
+[node name="Game" type="Node3D"]
+script = ExtResource("1_game")
+
+[node name="Map" parent="." instance=ExtResource("2_map")]
+
+[node name="Match" type="Node" parent="." node_paths=PackedStringArray("map")]
+script = ExtResource("3_match")
+map = NodePath("../Map")
+rules = ExtResource("6_rules")
+
+[node name="View" type="Node3D" parent="." node_paths=PackedStringArray("match_controller", "aim_button", "aim_line")]
+script = ExtResource("4_view")
+match_controller = NodePath("../Match")
+aim_button = NodePath("../HUD/HookButton")
+aim_line = NodePath("AimLine")
+
+[node name="AimLine" type="MeshInstance3D" parent="View"]
+cast_shadow = 0
+mesh = SubResource("Mesh_aim")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.5736, 0.8192, 0, -0.8192, 0.5736, 0, 11, 7.7)
+fov = 50.0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Joystick" type="VirtualJoystick" parent="HUD"]
+anchor_right = 0.5
+anchor_bottom = 1.0
+joystick_mode = 1
+visibility_mode = 1
+deadzone_ratio = 0.12
+
+[node name="HookButton" type="Control" parent="HUD"]
+layout_mode = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -250.0
+offset_top = -250.0
+offset_right = -70.0
+offset_bottom = -70.0
+mouse_filter = 2
+script = ExtResource("5_aim")
+
+[node name="Score" type="RichTextLabel" parent="HUD"]
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -220.0
+offset_top = 12.0
+offset_right = 220.0
+offset_bottom = 62.0
+mouse_filter = 2
+bbcode_enabled = true
+scroll_active = false
+theme_override_colors/font_outline_color = Color(0.05, 0.05, 0.1, 1)
+theme_override_constants/outline_size = 10
+theme_override_font_sizes/normal_font_size = 32
+
+[node name="Clock" type="Label" parent="HUD"]
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -120.0
+offset_top = 58.0
+offset_right = 120.0
+offset_bottom = 90.0
+horizontal_alignment = 1
+label_settings = SubResource("Label_small")
+
+[node name="Status" type="Label" parent="HUD"]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -330.0
+offset_top = 16.0
+offset_right = -24.0
+offset_bottom = 48.0
+horizontal_alignment = 2
+label_settings = SubResource("Label_small")
+
+[node name="KillFeed" type="VBoxContainer" parent="HUD"]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -420.0
+offset_top = 54.0
+offset_right = -24.0
+offset_bottom = 260.0
+mouse_filter = 2
+script = ExtResource("7_feed")
+
+[node name="Leave" type="Button" parent="HUD"]
+offset_left = 20.0
+offset_top = 16.0
+offset_right = 120.0
+offset_bottom = 62.0
+theme_override_font_sizes/font_size = 22
+text = "Leave"
+
+[node name="Gold" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 76.0
+offset_right = 220.0
+offset_bottom = 110.0
+label_settings = SubResource("Label_gold")
+
+[node name="Shop" type="Button" parent="HUD"]
+offset_left = 20.0
+offset_top = 116.0
+offset_right = 150.0
+offset_bottom = 172.0
+theme_override_font_sizes/font_size = 24
+text = "Shop"
+
+[node name="ShopPanel" parent="HUD" instance=ExtResource("8_shop")]
+visible = false
+
+[node name="EndBanner" type="VBoxContainer" parent="HUD"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -110.0
+offset_right = 400.0
+offset_bottom = 110.0
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="HUD/EndBanner"]
+layout_mode = 2
+horizontal_alignment = 1
+label_settings = SubResource("Label_banner")
+
+[node name="Subtitle" type="Label" parent="HUD/EndBanner"]
+layout_mode = 2
+horizontal_alignment = 1
+label_settings = SubResource("Label_banner_sub")

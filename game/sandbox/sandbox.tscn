@@ -1,0 +1,76 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://sandbox/sandbox.gd" id="1_sandbox"]
+[ext_resource type="PackedScene" path="res://maps/river_arena/river_arena.tscn" id="2_map"]
+[ext_resource type="Script" path="res://sandbox/sandbox_player.gd" id="3_player"]
+[ext_resource type="PackedScene" path="res://heroes/gaff/gaff.tscn" id="4_gaff"]
+[ext_resource type="PackedScene" path="res://heroes/gaff/hook_chain.tscn" id="5_chain"]
+[ext_resource type="Script" path="res://ui/aim_button.gd" id="7_aim"]
+
+[sub_resource type="CapsuleShape3D" id="Shape_hero"]
+radius = 0.6
+height = 2.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_aim"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 1, 1, 0.35)
+
+[sub_resource type="PlaneMesh" id="Mesh_aim"]
+material = SubResource("Mat_aim")
+size = Vector2(0.3, 13)
+
+[node name="Sandbox" type="Node3D"]
+script = ExtResource("1_sandbox")
+
+[node name="RiverArena" parent="." instance=ExtResource("2_map")]
+
+[node name="Player" type="CharacterBody3D" parent="." node_paths=PackedStringArray("aim_button", "target")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -6, 0, 0)
+collision_layer = 8
+collision_mask = 3
+script = ExtResource("3_player")
+aim_button = NodePath("../HUD/HookButton")
+target = NodePath("../Dummy")
+
+[node name="Shape" type="CollisionShape3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("Shape_hero")
+
+[node name="Gaff" parent="Player" instance=ExtResource("4_gaff")]
+
+[node name="HookChain" parent="Player" instance=ExtResource("5_chain")]
+
+[node name="AimLine" type="MeshInstance3D" parent="Player"]
+cast_shadow = 0
+mesh = SubResource("Mesh_aim")
+
+[node name="Dummy" parent="." instance=ExtResource("4_gaff")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 6, 0, 0)
+team_color = Color(0.22, 0.45, 0.92, 1)
+
+[node name="Camera3D" type="Camera3D" parent="."]
+fov = 50.0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Joystick" type="VirtualJoystick" parent="HUD"]
+layout_mode = 3
+anchor_right = 0.5
+anchor_bottom = 1.0
+joystick_mode = 1
+visibility_mode = 1
+deadzone_ratio = 0.12
+
+[node name="HookButton" type="Control" parent="HUD"]
+layout_mode = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -250.0
+offset_top = -250.0
+offset_right = -70.0
+offset_bottom = -70.0
+mouse_filter = 2
+script = ExtResource("7_aim")
