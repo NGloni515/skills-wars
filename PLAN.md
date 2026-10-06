@@ -15,16 +15,31 @@ published on the App Store and Google Play.
   block skills and give cover. Power-ups spawn in the river and are collected by hooking them.
 - **The hook is the only attack and kills in one hit.** No health bars, no auto-attack. Survival is about dodging.
   - Enemy hit → instant kill; the body is reeled back across the river as your catch.
-  - Teammate hit (optional) → pulls them to you, e.g. out of the path of an enemy hook.
+  - Teammate hit → pulls them to you without harm (no score), e.g. out of the path of an enemy hook.
   - Rock hit → hook returns. Two hooks collide → both return.
+- **Stun arrow (second skill, Mirana-style):** a 0.2 s throw sends a slow bolt (15.5 m/s, like Mirana's) across the whole map; the first enemy it
+  touches is stunned for 2 s (can't move, hook or shoot, and any throw in progress is cancelled). It passes through
+  allies, rocks block it, a Shield absorbs it, 20 s cooldown. Stun + hook is the core combo.
+- **Bear trap (third skill, Sun Strike-style):** drag TRAP to target any point on the map (short drag = near, full
+  drag = far). A 0.5 s casting animation that everyone sees, then the trap arms for 1.7 s — visible only to the
+  caster's team (the server doesn't send it to enemies) — then snaps shut, visible to all, rooting every enemy inside
+  (~1.8 m radius) for 2.5 s: they can't move but can still throw. Allies are never caught; a Shield absorbs it;
+  25 s cooldown. Enemies react to the casting animation by moving; bots do the same.
+- **Hesi hook:** touching HOOK starts a 0.6 s wind-up (aim by dragging during it); still holding at the end → the
+  hook launches and the 10 s cooldown starts. Letting go earlier cancels the throw (hesi): no hook, cooldown stays
+  ready, a Big Hook is kept. Faking throws to bait dodges is part of the skill; bots fake ~15% of their throws.
+- **Reach and cooldown:** the hook reaches from your river edge to the enemy's back wall (20.5 m), so nobody can
+  hide out of range. It has a 10 s cooldown that starts on the throw; the HOOK button shows the countdown.
 - **Commitment:** the hero can't move from wind-up until the hook is back (tunable). Missing leaves you exposed.
 - **Economy:** gold from kills and assists buys in-match upgrades — hook range, speed, size, cooldown (5 levels each).
   Items are about dodging and positioning (short dash, a shield that blocks one hook, speed boost).
   Everything resets each match; money never buys power.
 - **Match:** 3v3 by default (1v1/2v2 too, up to 4v4 on LAN). First to 20 kills or the leader after 6 minutes;
   ~3 s respawn. Targets tuned in playtests since one-hit kills make kills fast.
-- **Controls (landscape):** floating joystick on the left half; HOOK button bottom-right — drag to aim (a line shows
-  range), release to fire, drag back to the center to cancel, quick tap fires where you face.
+- **Controls (landscape):** floating joystick on the left half. HOOK (bottom-right) is hold-to-cast: press to start
+  the wind-up, drag to aim, keep holding to throw or let go early to hesi; a ring fills during the wind-up. ARROW (next
+  to it) is drag-to-aim, release to fire. TRAP (above HOOK) is drag-to-place, release to cast. Each button shows its
+  cooldown.
 - **Look:** smooth cartoon in the style of Brawl Stars — toon shading, dark outlines on heroes, bright but
   not neon colors, checkered arena tiles. Map props from CC0 packs (Quaternius), anything missing built in Blender.
 - **Tone:** cartoony, no blood or gore, to keep a low age rating.
@@ -90,7 +105,7 @@ LAN:     One phone hosts (server + player), others on the same Wi-Fi join direct
 | **2. Full match** 🟡 mostly done | Teams, one-hit kills, respawn, score, gold + shop upgrades, LAN discovery, HUD | Full 3v3 LAN match from lobby to victory screen |
 | **3. Online services** | NestJS backend, guest accounts, rooms by code, then quick match | Friends in different cities play via a code |
 | **4. Final Gaff + feel** 🟡 started | Final model/animations, VFX, sound, haptics | The hook feels great to land |
-| **5. Content** | River power-ups, items, bots, tutorial, progression, cosmetics, **second hero and map** | Ready for players outside your circle |
+| **5. Content** 🟡 started | River power-ups, items, bots, tutorial, progression, cosmetics, **second hero and map** | Ready for players outside your circle |
 | **6. Launch** | TestFlight / Play testing, analytics, crash reports, store pages, privacy policy | Soft launch in 1–2 countries |
 
 ## 6. Risks
@@ -131,3 +146,10 @@ LAN:     One phone hosts (server + player), others on the same Wi-Fi join direct
   sounds (throw, chain, clank, thwack, splash, poof, spawn, coin, kill ding, victory, defeat, UI click).
 - Left: replace placeholder sounds with a professional pack, music, final Gaff art, own-hook prediction if real
   phones show the hook appearing late.
+
+**Phase 5 — started (river power-ups)**
+- Done: an orb floats down the river every 12 s (max 2). Hook it to reel it in: Shield (blocks the next enemy hook,
+  15 s), Haste (+40% speed, 8 s), Gold bag (+150), Big Hook (next throw has double catch size). Bots go for orbs
+  when no enemy is in range. Visuals: floating orbs with icons and rings, shield bubble with a pop, haste sparkle
+  trail, glowing hand for a ready Big Hook, HUD icons for active effects. Tuning lives in `default_rules.tres`.
+- Left: second hero, second map, tutorial, progression, cosmetics.

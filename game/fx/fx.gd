@@ -32,6 +32,14 @@ const PRESETS := {
 		"gravity": Vector3(0, -1.0, 0), "scale": Vector2(0.15, 0.28), "color": Color.WHITE, "spin": 180.0,
 		"ring_radius": 0.8,
 	},
+	&"trail": {
+		"texture": &"star", "amount": 12, "lifetime": 0.45, "velocity": Vector2(0.2, 0.6), "spread": 180.0,
+		"gravity": Vector3(0, 0.5, 0), "scale": Vector2(0.12, 0.2), "color": Color(1.0, 0.9, 0.35), "spin": 180.0,
+	},
+	&"glow": {
+		"texture": &"star", "amount": 8, "lifetime": 0.5, "velocity": Vector2(0.3, 0.8), "spread": 180.0,
+		"gravity": Vector3(0, 0.8, 0), "scale": Vector2(0.1, 0.18), "color": Color(0.95, 0.45, 0.95), "spin": 180.0,
+	},
 	&"dust": {
 		"texture": &"soft", "amount": 3, "lifetime": 0.5, "velocity": Vector2(0.4, 1.0), "spread": 60.0,
 		"gravity": Vector3(0, 0.6, 0), "scale": Vector2(0.25, 0.4), "color": Color(0.82, 0.74, 0.58, 0.55),
@@ -70,7 +78,7 @@ static func emitter(preset: StringName, tint := Color.WHITE) -> GPUParticles3D:
 	return particles
 
 
-static func shockwave(parent: Node, position: Vector3, color: Color, radius: float, seconds := 0.4) -> void:
+static func ground_ring(color: Color, radius: float) -> MeshInstance3D:
 	if _ring_mesh == null:
 		_ring_mesh = QuadMesh.new()
 		_ring_mesh.orientation = PlaneMesh.FACE_Y
@@ -81,6 +89,13 @@ static func shockwave(parent: Node, position: Vector3, color: Color, radius: flo
 	ring.mesh = _ring_mesh
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	ring.set_instance_shader_parameter("tint", color)
+	# The ring texture peaks at 80% of the quad's half-size.
+	ring.scale = Vector3.ONE * radius * 2.5
+	return ring
+
+
+static func shockwave(parent: Node, position: Vector3, color: Color, radius: float, seconds := 0.4) -> void:
+	var ring := ground_ring(color, radius)
 	parent.add_child(ring)
 	ring.global_position = position
 	ring.scale = Vector3.ONE * radius * 0.3

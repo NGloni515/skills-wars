@@ -57,7 +57,7 @@ def build_animations(rig):
         hips=rot(loc=(0, -0.08, -0.05)),
     )
     ready = with_pose(idle, chest=rot(z=6), upper_arm_R=rot(x=-45), forearm_R=rot(x=-25))
-    add_action(rig, "hook_cast", [(0, idle), (7, windup), (9, release), (13, follow), (18, ready)])
+    add_action(rig, "hook_cast", [(0, idle), (15, windup), (18, release), (22, follow), (28, ready)])
 
     crank_a = {
         "spine": rot(x=-6), "head": rot(x=4),
@@ -134,3 +134,46 @@ def build_animations(rig):
         (0, idle), (8, arms_out), (14, slap), (20, arms_out), (26, slap), (34, flex), (45, idle),
     ])
 
+
+    throw_windup = with_pose(
+        idle,
+        spine=rot(z=8), chest=rot(x=-4, z=20),
+        upper_arm_L=rot(x=60, y=-30), forearm_L=rot(x=-80), hand_L=rot(x=-20),
+        upper_arm_R=rot(x=-20, y=10), thigh_L=rot(x=10), thigh_R=rot(x=-12),
+    )
+    throw_release = with_pose(
+        idle,
+        spine=rot(x=6, z=-8), chest=rot(x=8, z=-18),
+        upper_arm_L=rot(x=-100), forearm_L=rot(x=-10),
+        upper_arm_R=rot(x=20, y=10), thigh_L=rot(x=-20), thigh_R=rot(x=12),
+        hips=rot(loc=(0, -0.04, -0.03)),
+    )
+    throw_follow = with_pose(
+        throw_release, chest=rot(x=10, z=-22), upper_arm_L=rot(x=-70, y=10), forearm_L=rot(x=-15),
+    )
+    add_action(rig, "throw", [(0, idle), (4, throw_windup), (6, throw_release), (10, throw_follow), (15, idle)])
+
+    dizzy_a = {
+        "hips": rot(loc=(0.03, 0, -0.05)), "spine": rot(x=4, z=6), "chest": rot(z=4), "head": rot(x=14, z=14),
+        "upper_arm.L": rot(y=-22), "upper_arm.R": rot(y=22), "forearm.L": rot(x=-8), "forearm.R": rot(x=-8),
+        "thigh.L": rot(x=-10), "thigh.R": rot(x=-10), "shin.L": rot(x=14), "shin.R": rot(x=14),
+    }
+    dizzy_b = with_pose(
+        dizzy_a, hips=rot(loc=(-0.03, 0, -0.05)), spine=rot(x=4, z=-6), chest=rot(z=-4), head=rot(x=14, z=-14),
+        upper_arm_L=rot(y=-16), upper_arm_R=rot(y=28),
+    )
+    add_action(rig, "stunned", [(0, dizzy_a), (15, dizzy_b), (30, dizzy_a)], loop=True)
+
+    arms_overhead = with_pose(
+        idle, chest=rot(x=-10), head=rot(x=-8),
+        upper_arm_L=rot(x=-155, y=-10), upper_arm_R=rot(x=-150, y=10),
+        forearm_L=rot(x=-30), forearm_R=rot(x=-30), hips=rot(loc=(0, 0, 0.03)),
+    )
+    slam = {
+        "hips": rot(loc=(0, -0.05, -0.25)), "spine": rot(x=35), "chest": rot(x=10), "head": rot(x=-20),
+        "upper_arm.L": rot(x=-60, y=-10), "upper_arm.R": rot(x=-55, y=10),
+        "forearm.L": rot(x=-20), "forearm.R": rot(x=-20),
+        "thigh.L": rot(x=-45, y=-8), "thigh.R": rot(x=-45, y=8), "shin.L": rot(x=70), "shin.R": rot(x=70),
+        "foot.L": rot(x=-25), "foot.R": rot(x=-25),
+    }
+    add_action(rig, "trap_cast", [(0, idle), (6, arms_overhead), (12, slam), (15, slam), (22, idle)])

@@ -161,6 +161,55 @@ def kill_ding():
     return (np.sin(2 * math.pi * 1568 * t) + 0.6 * np.sin(2 * math.pi * 2093 * t)) * envelope(t, 0.003, 0.12)
 
 
+def powerup():
+    chime = arpeggio([783.99, 987.77, 1174.66, 1567.98], 0.05, 0.4, vibrato=0.004)
+    t = timeline(len(chime) / RATE)
+    shimmer = bandpass(noise(len(t)), 7000, 3.0) * envelope(t, 0.05, 0.25) * 0.4
+    return chime + shimmer
+
+
+def shield_pop():
+    t = timeline(0.3)
+    pop = tone(t, 300 + 1400 * np.clip(t / 0.05, 0, 1)) * envelope(t, 0.002, 0.04)
+    fizz = bandpass(noise(len(t)), 3500, 1.5) * envelope(t, 0.005, 0.08) * 0.6
+    return pop + fizz
+
+
+def arrow_shot():
+    t = timeline(0.3)
+    zing = tone(t, 900 + 2600 * np.clip(t / 0.12, 0, 1)) * envelope(t, 0.004, 0.08) * 0.6
+    air = bandpass(noise(len(t)), 5000, 1.2) * envelope(t, 0.01, 0.07)
+    return zing + air
+
+
+def stun_hit():
+    buffer = np.zeros(int(0.6 * RATE))
+    t = timeline(0.12)
+    place(buffer, (tone(t, 620) + 0.5 * tone(t, 1480)) * envelope(t, 0.001, 0.03), 0.0)
+    for i, start in enumerate((0.14, 0.24, 0.34)):
+        ct = timeline(0.08)
+        chirp = tone(ct, 2600 + 900 * (ct / 0.08) * (1 if i % 2 == 0 else -1) + 400 * i) * envelope(ct, 0.005, 0.025) * 0.45
+        place(buffer, chirp, start)
+    return buffer
+
+
+def trap_set():
+    buffer = np.zeros(int(0.45 * RATE))
+    for i in range(5):
+        place(buffer, metal_click(0.04, rng.uniform(1800, 4200, 3), 0.01) * 0.8, 0.05 + i * 0.045)
+    t = timeline(0.2)
+    place(buffer, tone(t, 120 * np.exp(-t / 0.05) + 60) * envelope(t, 0.002, 0.06), 0.3)
+    return buffer
+
+
+def trap_snap():
+    t = timeline(0.45)
+    clang = sum(np.sin(2 * math.pi * f * t) * np.exp(-t / d) for f, d in ((880, 0.12), (1950, 0.08), (3300, 0.05)))
+    crack = bandpass(noise(len(t)), 2500, 0.9) * envelope(t, 0.001, 0.02) * 2.0
+    thud = tone(t, 140 * np.exp(-t / 0.04) + 50) * envelope(t, 0.002, 0.08)
+    return clang * 0.5 + crack + thud
+
+
 def ui_click():
     t = timeline(0.05)
     return tone(t, 2000) * envelope(t, 0.001, 0.008)
@@ -170,7 +219,9 @@ SOUNDS = {
     "hook_throw": (hook_throw, 0.7), "chain_rattle": (chain_rattle, 0.55), "hook_clank": (hook_clank, 0.7),
     "hit_thwack": (hit_thwack, 0.9), "splash": (splash, 0.75), "poof": (poof, 0.7), "spawn": (spawn, 0.5),
     "coin": (coin, 0.45), "victory": (victory, 0.6), "defeat": (defeat, 0.6), "kill_ding": (kill_ding, 0.5),
-    "ui_click": (ui_click, 0.35),
+    "ui_click": (ui_click, 0.35), "powerup": (powerup, 0.55), "shield_pop": (shield_pop, 0.65),
+    "arrow_shot": (arrow_shot, 0.6), "stun_hit": (stun_hit, 0.65),
+    "trap_set": (trap_set, 0.6), "trap_snap": (trap_snap, 0.8),
 }
 
 

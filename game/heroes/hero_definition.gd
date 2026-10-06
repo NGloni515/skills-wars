@@ -8,3 +8,5 @@ extends Resource
 @export var move_speed := 5.5
 @export var radius := 0.6
 @export var hook: HookSkill
+@export var arrow: ArrowSkill
+@export var trap: TrapSkill

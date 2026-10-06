@@ -1,12 +1,20 @@
-[gd_resource type="Resource" script_class="HeroDefinition" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="HeroDefinition" load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://heroes/hero_definition.gd" id="1_def"]
 [ext_resource type="Script" path="res://heroes/hook_skill.gd" id="2_hook"]
 [ext_resource type="PackedScene" path="res://heroes/gaff/gaff.tscn" id="3_visual"]
 [ext_resource type="PackedScene" path="res://heroes/gaff/hook_chain.tscn" id="4_chain"]
+[ext_resource type="Script" path="res://heroes/arrow_skill.gd" id="5_arrow"]
+[ext_resource type="Script" path="res://heroes/trap_skill.gd" id="6_trap"]
 
 [sub_resource type="Resource" id="Resource_hook"]
 script = ExtResource("2_hook")
+
+[sub_resource type="Resource" id="Resource_arrow"]
+script = ExtResource("5_arrow")
+
+[sub_resource type="Resource" id="Resource_trap"]
+script = ExtResource("6_trap")
 
 [resource]
 script = ExtResource("1_def")
@@ -15,3 +23,5 @@ display_name = "Gaff"
 visual_scene = ExtResource("3_visual")
 skill_visual_scene = ExtResource("4_chain")
 hook = SubResource("Resource_hook")
+arrow = SubResource("Resource_arrow")
+trap = SubResource("Resource_trap")

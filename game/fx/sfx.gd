@@ -14,6 +14,12 @@ const STREAMS := {
 	&"defeat": preload("res://audio/sfx/defeat.wav"),
 	&"kill_ding": preload("res://audio/sfx/kill_ding.wav"),
 	&"ui_click": preload("res://audio/sfx/ui_click.wav"),
+	&"powerup": preload("res://audio/sfx/powerup.wav"),
+	&"shield_pop": preload("res://audio/sfx/shield_pop.wav"),
+	&"arrow_shot": preload("res://audio/sfx/arrow_shot.wav"),
+	&"stun_hit": preload("res://audio/sfx/stun_hit.wav"),
+	&"trap_set": preload("res://audio/sfx/trap_set.wav"),
+	&"trap_snap": preload("res://audio/sfx/trap_snap.wav"),
 }
 const PITCH_VARIATION := 0.07
 

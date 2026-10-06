@@ -16,6 +16,7 @@ var _player: AnimationPlayer
 var _skeleton: Skeleton3D
 var _chain_bone := -1
 var _hook_in_hand: Node3D
+var _hand: BoneAttachment3D
 
 
 func _ready() -> void:
@@ -31,6 +32,9 @@ func _ready() -> void:
 	_skeleton = find_children("*", "Skeleton3D", true, false)[0]
 	_chain_bone = _skeleton.find_bone("chain_socket")
 	_hook_in_hand = find_child("HookHead", true, false)
+	_hand = BoneAttachment3D.new()
+	_hand.bone_name = "hook_socket"
+	_skeleton.add_child(_hand)
 	_player.animation_finished.connect(_on_animation_finished)
 	play(&"idle")
 
@@ -47,6 +51,10 @@ func restart(anim: StringName, blend := 0.08) -> void:
 
 func set_hook_in_hand(held: bool) -> void:
 	_hook_in_hand.visible = held
+
+
+func hand_anchor() -> Node3D:
+	return _hand
 
 
 func chain_origin() -> Vector3:

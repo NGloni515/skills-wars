@@ -1,7 +1,8 @@
 extends Node3D
 
-const CAMERA_OFFSET := Vector3(0.0, 11.0, 7.7)
-const CAMERA_LEAD := 3.5
+const CAMERA_OFFSET := Vector3(0.0, 13.0, 9.1)
+# The camera leads toward the enemy bank so everything inside hook range is on screen.
+const CAMERA_LEAD_OF_RANGE := 0.42
 const CAMERA_FOLLOW_SPEED := 6.0
 const SHAKE_DECAY := 2.2
 const SHAKE_MAX_OFFSET := 0.45
@@ -15,6 +16,8 @@ const VIBRATION_MSEC := [[0.9, 90], [0.6, 45]]
 @onready var _status: Label = $HUD/Status
 @onready var _gold: Label = $HUD/Gold
 @onready var _hook_button: AimButton = $HUD/HookButton
+@onready var _arrow_button: AimButton = $HUD/ArrowButton
+@onready var _trap_button: AimButton = $HUD/TrapButton
 @onready var _shop: ShopPanel = $HUD/ShopPanel
 @onready var _end_banner: Control = $HUD/EndBanner
 
@@ -32,13 +35,21 @@ func _ready() -> void:
 		_camera.queue_free()
 		set_process(false)
 		return
-	_hook_button.fired.connect(_match.queue_fire)
+	_hook_button.hold_to_cast = true
+	_hook_button.pressed_down.connect(_match.press_hook)
+	_hook_button.released.connect(_match.release_hook)
+	_arrow_button.fired.connect(_match.queue_arrow)
+	_trap_button.fired_vector.connect(func(drag: Vector2) -> void: _match.queue_trap(_match.trap_target_for(drag)))
 	_match.score_changed.connect(_on_score_changed)
 	_match.kill_reported.connect($HUD/KillFeed.add_kill)
 	$HUD/Leave.pressed.connect(Net.leave)
 	$HUD/Shop.pressed.connect(_shop.show)
 	_shop.buy_requested.connect(_match.buy)
 	_view.impact.connect(_on_impact)
+	_view.powerup_collected.connect(func(_kind: PowerUpState.Kind, is_local: bool) -> void:
+		if is_local:
+			Input.vibrate_handheld(25)
+	)
 	for button: BaseButton in find_children("*", "BaseButton", true, false):
 		button.pressed.connect(Sfx.play.bind(self, &"ui_click", -8.0))
 	_on_score_changed(0, 0)
@@ -54,14 +65,25 @@ func _process(delta: float) -> void:
 	_status.text = _status_text()
 	_clock.text = _clock_text()
 	_gold.text = "%d gold" % hero.gold
+	_hook_button.cooldown_total = hero.hook_cooldown()
+	_hook_button.cooldown_left = _match.hook_cooldown_left()
+	_hook_button.cast_progress = _match.local_cast_progress()
+	_match.hook_aim = _hook_button.aim_direction() if _hook_button.is_aiming() else Vector2.ZERO
+	_arrow_button.cooldown_total = hero.definition.arrow.cooldown
+	_arrow_button.cooldown_left = _match.arrow_cooldown_left()
+	_trap_button.cooldown_total = hero.definition.trap.cooldown
+	_trap_button.cooldown_left = _match.trap_cooldown_left()
+	$HUD/Effects/Shield.visible = hero.shielded
+	$HUD/Effects/Haste.visible = hero.speed_multiplier > 1.01
+	$HUD/Effects/BigHook.visible = hero.big_hook_ready
 	if _shop.visible:
 		_shop.refresh(hero.gold, hero.upgrades, _match.rules.upgrade_costs, _match.phase == MatchSimulation.Phase.PLAYING)
 	_update_end_banner(hero.team)
 
 
 func _follow_camera(delta: float) -> void:
-	var lead := CAMERA_LEAD if _view.local_team() == 0 else -CAMERA_LEAD
-	var target := _view.local_position() + Vector3(lead, 0.0, 0.0)
+	var side := 1.0 if _view.local_team() == 0 else -1.0
+	var target := _view.local_position() + Vector3(side * _match.local_hero.hook_range() * CAMERA_LEAD_OF_RANGE, 0.0, 0.0)
 	if not _camera_placed:
 		_camera.global_position = target + CAMERA_OFFSET
 		_camera.look_at(target)

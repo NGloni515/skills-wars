@@ -8,6 +8,7 @@ var hero_walls: Array[Rect2] = []
 var hero_blockers: Array[Vector3] = []
 var hook_blockers: Array[Vector3] = []
 var spawns: Array[Array] = [[], []]
+var bounds := Rect2()
 
 
 static func from_map(map: Node3D) -> Arena:
@@ -15,6 +16,8 @@ static func from_map(map: Node3D) -> Arena:
 	for body: StaticBody3D in map.find_children("*", "StaticBody3D", true, false):
 		for shape_node: CollisionShape3D in body.find_children("*", "CollisionShape3D", false, false):
 			arena._add_shape(shape_node, body.collision_layer)
+	for i in arena.hero_walls.size():
+		arena.bounds = arena.hero_walls[i] if i == 0 else arena.bounds.merge(arena.hero_walls[i])
 	for team in 2:
 		for marker: Node3D in map.get_tree().get_nodes_in_group("spawn_team_%d" % team):
 			if map.is_ancestor_of(marker):

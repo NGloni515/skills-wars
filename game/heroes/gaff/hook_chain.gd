@@ -5,7 +5,8 @@ const HERO_SHADER := preload("res://shared/shaders/hero.gdshader")
 const OUTLINE_SHADER := preload("res://shared/shaders/outline.gdshader")
 const CHAIN_LINK := preload("res://heroes/gaff/chain_link.glb")
 const LINK_SPACING := 0.14
-const MAX_LINKS := 200
+const MAX_LINKS := 260
+const BIG_HEAD_SCALE := 1.8
 
 @onready var _head: Node3D = $Head
 @onready var _links: MultiMeshInstance3D = $Links
@@ -47,6 +48,10 @@ func show_chain(origin: Vector3, head: Vector3, direction: Vector3) -> void:
 		var link_position := origin + span * ((i + 0.5) / count)
 		multimesh.set_instance_transform(i, Transform3D(flat if i % 2 == 0 else turned, link_position))
 	multimesh.visible_instance_count = count
+
+
+func set_big(big: bool) -> void:
+	_head.scale = Vector3.ONE * (BIG_HEAD_SCALE if big else 1.0)
 
 
 func hide_chain() -> void:

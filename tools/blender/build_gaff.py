@@ -402,7 +402,7 @@ def render_previews(rig, hidden):
 
     samples = {
         "run-loop": [0, 5, 10], "hook_cast": [7, 9, 13], "reel-loop": [0],
-        "dragged-loop": [0], "death": [14, 36], "spawn": [6], "taunt": [14, 34],
+        "dragged-loop": [0], "death": [14, 36], "spawn": [6], "taunt": [14, 34], "throw": [4, 6], "stunned-loop": [0, 15], "trap_cast": [6, 12],
     }
     for action_name, frames in samples.items():
         for frame in frames:
