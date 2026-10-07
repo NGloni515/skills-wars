@@ -1,0 +1,16 @@
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: skills-wars-backend
+    init: true
+    restart: unless-stopped
+    environment:
+      PUBLIC_HOST: ${PUBLIC_HOST:?Set PUBLIC_HOST to this server's public IP or domain}
+      MATCH_SECRET: ${MATCH_SECRET:?Set MATCH_SECRET to a long random string}
+      MATCH_PORT_MIN: 7800
+      MATCH_PORT_MAX: 7819
+    ports:
+      - "3000:3000/tcp"
+      - "7800-7819:7800-7819/udp"
