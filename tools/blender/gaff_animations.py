@@ -56,8 +56,14 @@ def build_animations(rig):
         release, chest=rot(x=12, z=26), upper_arm_R=rot(x=-70, y=-12), forearm_R=rot(x=-10),
         hips=rot(loc=(0, -0.08, -0.05)),
     )
+    coiled = with_pose(
+        windup, spine=rot(z=-14), chest=rot(x=-6, z=-36),
+        upper_arm_R=rot(x=62, y=32), forearm_R=rot(x=-78), hips=rot(loc=(0, 0.02, -0.045)),
+    )
     ready = with_pose(idle, chest=rot(z=6), upper_arm_R=rot(x=-45), forearm_R=rot(x=-25))
-    add_action(rig, "hook_cast", [(0, idle), (15, windup), (18, release), (22, follow), (28, ready)])
+    add_action(rig, "hook_cast", [
+        (0, idle), (9, windup), (17, coiled), (21, release), (25, follow), (31, ready),
+    ])
 
     crank_a = {
         "spine": rot(x=-6), "head": rot(x=4),

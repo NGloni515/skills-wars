@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=24 format=3]
 
 [ext_resource type="Script" path="res://match/game.gd" id="1_game"]
 [ext_resource type="PackedScene" path="res://maps/river_arena/river_arena.tscn" id="2_map"]
@@ -11,6 +11,10 @@
 [ext_resource type="Texture2D" path="res://fx/textures/icon_shield.png" id="9_icon_shield"]
 [ext_resource type="Texture2D" path="res://fx/textures/icon_haste.png" id="10_icon_haste"]
 [ext_resource type="Texture2D" path="res://fx/textures/icon_big_hook.png" id="11_icon_big_hook"]
+[ext_resource type="PackedScene" path="res://ui/settings_panel.tscn" id="12_settings"]
+[ext_resource type="Texture2D" path="res://fx/textures/skill_hook.png" id="13_skill_hook"]
+[ext_resource type="Texture2D" path="res://fx/textures/skill_arrow.png" id="14_skill_arrow"]
+[ext_resource type="Texture2D" path="res://fx/textures/skill_trap.png" id="15_skill_trap"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_aim"]
 transparency = 1
@@ -103,6 +107,7 @@ offset_right = -70.0
 offset_bottom = -70.0
 mouse_filter = 2
 script = ExtResource("5_aim")
+icon = ExtResource("13_skill_hook")
 
 [node name="ArrowButton" type="Control" parent="HUD"]
 layout_mode = 3
@@ -116,6 +121,7 @@ offset_right = -280.0
 offset_bottom = -70.0
 mouse_filter = 2
 script = ExtResource("5_aim")
+icon = ExtResource("14_skill_arrow")
 radius = 100.0
 label = "ARROW"
 
@@ -131,6 +137,7 @@ offset_right = -100.0
 offset_bottom = -260.0
 mouse_filter = 2
 script = ExtResource("5_aim")
+icon = ExtResource("15_skill_trap")
 radius = 100.0
 label = "TRAP"
 
@@ -161,7 +168,7 @@ label_settings = SubResource("Label_small")
 [node name="Status" type="Label" parent="HUD"]
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -330.0
+offset_left = -420.0
 offset_top = 16.0
 offset_right = -24.0
 offset_bottom = 48.0
@@ -186,6 +193,14 @@ offset_bottom = 62.0
 theme_override_font_sizes/font_size = 22
 text = "Leave"
 
+[node name="Settings" type="Button" parent="HUD"]
+offset_left = 130.0
+offset_top = 16.0
+offset_right = 260.0
+offset_bottom = 62.0
+theme_override_font_sizes/font_size = 22
+text = "Settings"
+
 [node name="Gold" type="Label" parent="HUD"]
 offset_left = 24.0
 offset_top = 76.0
@@ -200,6 +215,15 @@ offset_right = 150.0
 offset_bottom = 172.0
 theme_override_font_sizes/font_size = 24
 text = "Shop"
+
+[node name="QuickBuy" type="Button" parent="HUD"]
+offset_left = 160.0
+offset_top = 116.0
+offset_right = 290.0
+offset_bottom = 172.0
+theme_override_constants/icon_max_width = 34
+theme_override_font_sizes/font_size = 22
+text = "100"
 
 [node name="Effects" type="HBoxContainer" parent="HUD"]
 offset_left = 20.0
@@ -232,6 +256,8 @@ expand_mode = 1
 
 [node name="ShopPanel" parent="HUD" instance=ExtResource("8_shop")]
 visible = false
+
+[node name="SettingsPanel" parent="HUD" instance=ExtResource("12_settings")]
 
 [node name="EndBanner" type="VBoxContainer" parent="HUD"]
 visible = false

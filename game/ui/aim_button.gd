@@ -4,14 +4,15 @@ extends Control
 signal aim_changed(direction: Vector2)
 signal fired(direction: Vector2)
 signal canceled
-signal pressed_down
-signal released
+signal cancel_tapped
 signal fired_vector(vector: Vector2)
+
+const CANCEL_COLOR := Color(1.0, 0.45, 0.4)
 
 @export var radius := 120.0
 @export var cancel_radius := 30.0
 @export var label := "HOOK"
-@export var hold_to_cast := false
+@export var icon: Texture2D
 
 var cooldown_left := 0.0:
 	set(value):
@@ -24,6 +25,11 @@ var cast_progress := 0.0:
 		if not is_equal_approx(cast_progress, value):
 			cast_progress = value
 			queue_redraw()
+var cancel_mode := false:
+	set(value):
+		if cancel_mode != value:
+			cancel_mode = value
+			queue_redraw()
 
 var _touch := -1
 var _drag := Vector2.ZERO
@@ -32,20 +38,18 @@ var _left_center := false
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
-		if event.pressed and _touch == -1 and cooldown_left <= 0.0 and _center().distance_to(event.position) <= _button_radius():
+		var on_button := _center().distance_to(event.position) <= _button_radius()
+		if event.pressed and _touch == -1 and on_button and cancel_mode:
+			cancel_tapped.emit()
+			get_viewport().set_input_as_handled()
+		elif event.pressed and _touch == -1 and on_button and cooldown_left <= 0.0:
 			_touch = event.index
 			_drag = Vector2.ZERO
 			_left_center = false
 			get_viewport().set_input_as_handled()
-			if hold_to_cast:
-				pressed_down.emit()
 		elif not event.pressed and event.index == _touch:
 			_touch = -1
-			if hold_to_cast:
-				_drag = Vector2.ZERO
-				released.emit()
-			else:
-				_release()
+			_release()
 		queue_redraw()
 	elif event is InputEventScreenDrag and event.index == _touch:
 		_drag = (event.position - _center()).limit_length(radius)
@@ -57,7 +61,7 @@ func _input(event: InputEvent) -> void:
 
 
 func is_aiming() -> bool:
-	return _touch != -1 and (hold_to_cast or _drag.length() > cancel_radius)
+	return _touch != -1 and _drag.length() > cancel_radius
 
 
 func aim_vector() -> Vector2:
@@ -93,10 +97,13 @@ func _draw() -> void:
 	var r := _button_radius()
 	var pressed := _touch != -1
 	draw_circle(center, r, Color(0.1, 0.12, 0.16, 0.55 if pressed else 0.4))
-	draw_arc(center, r, 0.0, TAU, 48, Color(1, 1, 1, 0.6), 3.0, true)
+	draw_arc(center, r, 0.0, TAU, 48, CANCEL_COLOR if cancel_mode else Color(1, 1, 1, 0.6), 3.0, true)
+	var busy := pressed or cancel_mode or cooldown_left > 0.0
+	if icon:
+		var icon_size := r * 1.1
+		draw_texture_rect(icon, Rect2(center - Vector2.ONE * icon_size * 0.5, Vector2.ONE * icon_size), false, Color(1, 1, 1, 0.3 if busy else 1.0))
 	if pressed:
-		if not hold_to_cast:
-			draw_arc(center, cancel_radius, 0.0, TAU, 32, Color(1, 0.4, 0.4, 0.7), 2.0, true)
+		draw_arc(center, cancel_radius, 0.0, TAU, 32, Color(1, 0.4, 0.4, 0.7), 2.0, true)
 		draw_circle(center + _drag, r * 0.32, Color(1, 1, 1, 0.75))
 	if cast_progress > 0.0:
 		draw_arc(center, r - 4.0, -PI / 2.0, -PI / 2.0 + TAU * cast_progress, 48, Color(1.0, 0.82, 0.3, 0.95), 8.0, true)
@@ -104,7 +111,9 @@ func _draw() -> void:
 	if cooldown_left > 0.0:
 		_draw_cooldown(center, r)
 		_draw_centered(font, center, "%d" % ceili(cooldown_left), 46, Color(1, 1, 1, 0.95))
-	else:
+	elif cancel_mode:
+		_draw_centered(font, center, "CANCEL", roundi(r * 0.24), CANCEL_COLOR.lightened(0.5))
+	elif icon == null:
 		_draw_centered(font, center, label, 22, Color(1, 1, 1, 0.3 if pressed else 0.9))
 
 

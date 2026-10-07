@@ -28,11 +28,9 @@ var hook_target := 0
 var hook_kills := false
 var hook_powerup := 0
 var hook_is_big := false
-var hook_held := false
-var hook_aim := Vector2.ZERO
 
 var gold := 0
-var upgrades: Array[int] = [0, 0, 0, 0]
+var upgrades: Array[int] = Upgrades.none()
 
 var shield_until := 0
 var haste_until := 0
@@ -69,20 +67,24 @@ func can_move() -> bool:
 	return can_act() and not rooted
 
 
+func stat(kind: Upgrades.Kind) -> float:
+	return Upgrades.stat(definition, kind, upgrades[kind])
+
+
 func hook_range() -> float:
-	return definition.hook.max_range + upgrades[HookSkill.Upgrade.RANGE] * definition.hook.range_per_level
+	return stat(Upgrades.Kind.HOOK_RANGE)
 
 
 func hook_speed() -> float:
-	return definition.hook.speed + upgrades[HookSkill.Upgrade.SPEED] * definition.hook.speed_per_level
+	return stat(Upgrades.Kind.HOOK_SPEED)
 
 
 func hook_return_speed() -> float:
-	return definition.hook.return_speed + upgrades[HookSkill.Upgrade.SPEED] * definition.hook.speed_per_level
+	return definition.hook.return_speed + upgrades[Upgrades.Kind.HOOK_SPEED] * definition.hook.speed_per_level
 
 
 func hook_radius() -> float:
-	var radius := definition.hook.hit_radius + upgrades[HookSkill.Upgrade.SIZE] * definition.hook.hit_radius_per_level
+	var radius := stat(Upgrades.Kind.HOOK_SIZE)
 	return radius * definition.hook.big_hook_multiplier if hook_is_big else radius
 
 
@@ -91,7 +93,23 @@ func move_speed() -> float:
 
 
 func hook_cooldown() -> float:
-	return maxf(0.1, definition.hook.cooldown + upgrades[HookSkill.Upgrade.COOLDOWN] * definition.hook.cooldown_per_level)
+	return stat(Upgrades.Kind.HOOK_COOLDOWN)
+
+
+func arrow_speed() -> float:
+	return stat(Upgrades.Kind.ARROW_SPEED)
+
+
+func stun_time() -> float:
+	return stat(Upgrades.Kind.ARROW_STUN)
+
+
+func trap_radius() -> float:
+	return stat(Upgrades.Kind.TRAP_SIZE)
+
+
+func trap_cooldown() -> float:
+	return stat(Upgrades.Kind.TRAP_COOLDOWN)
 
 
 func to_row() -> Array:
@@ -104,6 +122,7 @@ func to_row() -> Array:
 		shielded, speed_multiplier, big_hook_ready, hook_is_big, cooldown_until,
 		caught_by, stunned, arrow_flying, arrow_position.x, arrow_position.y, arrow_direction.angle(), arrow_cooldown_until,
 		rooted, trap_cooldown_until,
+		upgrades[4], upgrades[5], upgrades[6], upgrades[7],
 	]
 
 
@@ -122,7 +141,7 @@ func apply_row(row: Array) -> HeroState:
 	hook_direction = Vector2.from_angle(row[13])
 	last_input_seq = row[14]
 	gold = row[15]
-	upgrades = [row[16], row[17], row[18], row[19]]
+	upgrades = [row[16], row[17], row[18], row[19], row[34], row[35], row[36], row[37]]
 	shielded = row[20]
 	speed_multiplier = row[21]
 	big_hook_ready = row[22]

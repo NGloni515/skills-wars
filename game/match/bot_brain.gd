@@ -9,52 +9,55 @@ const ARROW_CHANCE_PER_TICK := 1.0 / 90.0
 const FEINT_CHANCE := 0.15
 const TRAP_CHANCE_PER_TICK := 1.0 / 150.0
 const DODGE_CHANCE := 0.7
-const FEINT_RELEASE := Vector2(0.1, 0.3)
-const BANK_X := Vector2(4.6, 12.0)
-const BANK_Z := 13.0
-const ENGAGE_X := 4.6
+const FEINT_CANCEL_SECONDS := Vector2(0.15, 0.5)
+const BANK_INNER_MARGIN := 1.1
+const BANK_DEPTH_FRACTION := 0.6
+const BANK_END_MARGIN := 2.0
 
 var _rng := RandomNumberGenerator.new()
 var _wander_target := Vector2.ZERO
 var _next_wander_tick := 0
 var _next_fire_tick := 0
-var _hook_aim := Vector2.ZERO
-var _hold_until_tick := -1
+var _cancel_tick := -1
 var _dodged_casts := {}
+var _bank_x := Vector2.ZERO
+var _bank_z := 0.0
 
 
-func _init() -> void:
+func _init(arena: Arena) -> void:
 	_rng.randomize()
 	_next_fire_tick = int(_rng.randf_range(FIRE_SECONDS.x, FIRE_SECONDS.y) * MatchSimulation.TICK_RATE)
+	var bank_depth := arena.play_area.end.x - arena.river_edge
+	_bank_x = Vector2(arena.river_edge + BANK_INNER_MARGIN, arena.river_edge + bank_depth * BANK_DEPTH_FRACTION)
+	_bank_z = arena.play_area.end.y - BANK_END_MARGIN
 
 
 func decide(me: HeroState, others: Array, tick: int, orbs: Array = []) -> Array:
 	if me.life != HeroState.Life.ALIVE:
-		_hold_until_tick = -1
+		_cancel_tick = -1
 		return [Vector2.ZERO, 0, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO]
 	if tick >= _next_wander_tick or me.position.distance_to(_wander_target) < 0.5:
 		var side := -1.0 if me.team == 0 else 1.0
-		_wander_target = Vector2(side * _rng.randf_range(BANK_X.x, BANK_X.y), _rng.randf_range(-BANK_Z, BANK_Z))
+		_wander_target = Vector2(side * _rng.randf_range(_bank_x.x, _bank_x.y), _rng.randf_range(-_bank_z, _bank_z))
 		_next_wander_tick = tick + _seconds_to_ticks(WANDER_SECONDS)
 	_react_to_trap_casts(me, others, tick)
 	var move := (_wander_target - me.position).normalized()
-	if tick < _hold_until_tick:
-		return [move, MatchSimulation.HOOK_HELD, _hook_aim, Vector2.ZERO, Vector2.ZERO]
+	if _cancel_tick >= 0 and tick >= _cancel_tick:
+		_cancel_tick = -1
+		if me.action == HeroState.Action.CASTING:
+			return [move, MatchSimulation.HOOK_CANCEL, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO]
 	if not me.can_act():
 		return [move, 0, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO]
 	var fire := _choose_hook(me, others, orbs, tick)
 	if fire != Vector2.ZERO:
-		_hook_aim = fire
-		var hold := me.definition.hook.release_time + 0.1
 		if _rng.randf() < FEINT_CHANCE:
-			hold = _rng.randf_range(FEINT_RELEASE.x, FEINT_RELEASE.y)
-			_next_fire_tick = tick + int(0.6 * MatchSimulation.TICK_RATE)
-		_hold_until_tick = tick + int(hold * MatchSimulation.TICK_RATE)
-		return [move, MatchSimulation.HOOK_PRESSED | MatchSimulation.HOOK_HELD, fire, Vector2.ZERO, Vector2.ZERO]
+			_cancel_tick = tick + _seconds_to_ticks(FEINT_CANCEL_SECONDS)
+			_next_fire_tick = tick + int(1.2 * MatchSimulation.TICK_RATE)
+		return [move, MatchSimulation.HOOK_CAST, fire, Vector2.ZERO, Vector2.ZERO]
 	var enemy := _closest_enemy(me, others, false)
 	var arrow := Vector2.ZERO
 	if enemy and tick >= me.arrow_cooldown_until and not me.arrow_flying and _rng.randf() < ARROW_CHANCE_PER_TICK:
-		arrow = _lead(me, enemy, me.definition.arrow.cast_time, me.definition.arrow.speed, AIM_ERROR_DEGREES)
+		arrow = _lead(me, enemy, me.definition.arrow.cast_time, me.arrow_speed(), AIM_ERROR_DEGREES)
 		return [move, 0, Vector2.ZERO, arrow, Vector2.ZERO]
 	if enemy and tick >= me.trap_cooldown_until and _rng.randf() < TRAP_CHANCE_PER_TICK:
 		var trap := me.definition.trap
@@ -73,7 +76,7 @@ func _react_to_trap_casts(me: HeroState, others: Array, tick: int) -> void:
 		_dodged_casts[key] = true
 		if _rng.randf() < DODGE_CHANCE:
 			var side := -1.0 if me.team == 0 else 1.0
-			_wander_target = Vector2(side * _rng.randf_range(BANK_X.x, BANK_X.y), _rng.randf_range(-BANK_Z, BANK_Z))
+			_wander_target = Vector2(side * _rng.randf_range(_bank_x.x, _bank_x.y), _rng.randf_range(-_bank_z, _bank_z))
 			_next_wander_tick = tick + _seconds_to_ticks(WANDER_SECONDS)
 
 
@@ -92,7 +95,7 @@ func _choose_hook(me: HeroState, others: Array, orbs: Array, tick: int) -> Vecto
 		fire = _aim(me, orb.position, ORB_AIM_ERROR_DEGREES)
 	elif enemy:
 		var side := -1.0 if me.team == 0 else 1.0
-		_wander_target = Vector2(side * ENGAGE_X, clampf(enemy.position.y, -BANK_Z, BANK_Z))
+		_wander_target = Vector2(side * _bank_x.x, clampf(enemy.position.y, -_bank_z, _bank_z))
 	if fire != Vector2.ZERO:
 		_next_fire_tick = tick + _seconds_to_ticks(FIRE_SECONDS)
 	return fire

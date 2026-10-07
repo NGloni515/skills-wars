@@ -1,11 +1,18 @@
 import math
 
+# Terrain extends well past the play area so the camera never sees its edge.
 HALF_X = 32.0
 HALF_Z = 26.0
+PLAY_HALF_X = 14.4
+PLAY_HALF_Z = 12.0
+RIVER_EDGE = 2.45
+WATER_HALF_WIDTH = 2.03
+WATER_PLANE_HALF_WIDTH = 2.94
+WATER_LEVEL = -0.3
 RIVER_BED = -0.95
-SLOPE_WIDTH = 1.15
-PLAY_HALF_X = 18.0
-PLAY_HALF_Z = 15.0
+SHORE_TOP = 2.42
+SHORE_WOBBLE = (0.12, 0.06)
+SLOPE_WIDTH = 0.8
 
 GRASS_A = (0.3, 0.56, 0.2)
 GRASS_B = (0.4, 0.64, 0.25)
@@ -28,7 +35,7 @@ def mix(a, b, t):
 def shore_top(x, z):
     # The east bank mirrors the west bank through the center, so both teams get the same shoreline.
     zz = z if x < 0 else -z
-    return 3.45 + 0.17 * math.sin(zz * 0.55) + 0.09 * math.sin(zz * 1.31 + 1.7)
+    return SHORE_TOP + SHORE_WOBBLE[0] * math.sin(zz * 0.55) + SHORE_WOBBLE[1] * math.sin(zz * 1.31 + 1.7)
 
 
 def bank_t(x, z):
@@ -37,7 +44,10 @@ def bank_t(x, z):
 
 
 def hills(x, z):
-    edge = max(smoothstep(19.5, 27.0, abs(x)), smoothstep(16.5, 23.0, abs(z)))
+    edge = max(
+        smoothstep(PLAY_HALF_X + 1.5, PLAY_HALF_X + 9.0, abs(x)),
+        smoothstep(PLAY_HALF_Z + 1.5, PLAY_HALF_Z + 8.0, abs(z)),
+    )
     return edge * (0.7 + 0.45 * math.sin(x * 0.45) * math.cos(z * 0.38))
 
 

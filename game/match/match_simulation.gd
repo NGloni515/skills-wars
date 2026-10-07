@@ -12,8 +12,8 @@ signal hero_trapped(victim: int, owner: int)
 enum Phase { PLAYING, ENDED }
 
 const TICK_RATE := 60
-const HOOK_PRESSED := 1
-const HOOK_HELD := 2
+const HOOK_CAST := 1
+const HOOK_CANCEL := 2
 const TRAP_CAST := 4
 const MAX_INPUT_BACKLOG := 8
 const BOT_SHOPPING_INTERVAL := 2 * TICK_RATE
@@ -62,7 +62,7 @@ func add_bot(definition: HeroDefinition, team := -1) -> HeroState:
 	_next_bot_id -= 1
 	var hero := _add_hero(bot_id, definition, team if team >= 0 else _team_for(true))
 	hero.is_bot = true
-	bots[bot_id] = BotBrain.new()
+	bots[bot_id] = BotBrain.new(arena)
 	names[bot_id] = "Bot %d" % -bot_id
 	roster_changed.emit()
 	return hero
@@ -167,7 +167,7 @@ func restart() -> void:
 	for hero: HeroState in heroes.values():
 		_cancel_hook(hero)
 		hero.gold = 0
-		hero.upgrades = [0, 0, 0, 0]
+		hero.upgrades = Upgrades.none()
 		hero.cooldown_until = 0
 		hero.arrow_cooldown_until = 0
 		hero.arrow_flying = false
@@ -224,15 +224,14 @@ func _consume_inputs(hero: HeroState, delta: float) -> void:
 		hero.pending_inputs.erase(next_seq)
 		hero.last_input_seq = next_seq
 		hero.last_move = input[0]
-		var hook_flags: int = input[1]
-		hero.hook_held = hook_flags & HOOK_HELD != 0
-		if input[2] != Vector2.ZERO:
-			hero.hook_aim = input[2]
-		if hook_flags & HOOK_PRESSED:
+		var flags: int = input[1]
+		if flags & HOOK_CANCEL and hero.action == HeroState.Action.CASTING:
+			_feint(hero)
+		elif flags & HOOK_CAST:
 			_start_cast(hero, input[2])
 		elif input[3] != Vector2.ZERO:
 			_start_arrow(hero, input[3])
-		elif hook_flags & TRAP_CAST:
+		elif flags & TRAP_CAST:
 			_start_trap(hero, input[4])
 		apply_move(arena, hero, input[0], delta)
 
@@ -247,7 +246,6 @@ func _discard_inputs(hero: HeroState) -> void:
 func _start_cast(hero: HeroState, aim: Vector2) -> void:
 	if not hero.can_act() or tick < hero.cooldown_until:
 		return
-	hero.hook_aim = aim
 	hero.hook_direction = aim.normalized() if aim != Vector2.ZERO else Vector2(sin(hero.facing), cos(hero.facing))
 	hero.facing = atan2(hero.hook_direction.x, hero.hook_direction.y)
 	hero.hook_is_big = hero.big_hook_ready
@@ -281,7 +279,7 @@ func _update_arrow(hero: HeroState, delta: float) -> void:
 	if not hero.arrow_flying:
 		return
 	var from := hero.arrow_position
-	var to := from + hero.arrow_direction * skill.speed * delta
+	var to := from + hero.arrow_direction * hero.arrow_speed() * delta
 	if skill.blocked_by_rocks and arena.first_hook_blocker_hit(from, to, skill.hit_radius) <= 1.0:
 		hero.arrow_flying = false
 		return
@@ -308,7 +306,7 @@ func _start_trap(hero: HeroState, target: Vector2) -> void:
 	hero.trap_target = (hero.position + offset).clamp(arena.bounds.position, arena.bounds.end)
 	if offset.length_squared() > 0.01:
 		hero.facing = atan2(offset.x, offset.y)
-	hero.trap_cooldown_until = tick + int(skill.cooldown * TICK_RATE)
+	hero.trap_cooldown_until = tick + int(hero.trap_cooldown() * TICK_RATE)
 	_set_action(hero, HeroState.Action.TRAP_CAST)
 
 
@@ -322,7 +320,7 @@ func _update_trap_cast(hero: HeroState) -> void:
 	trap.team = hero.team
 	trap.owner = hero.peer_id
 	trap.position = hero.trap_target
-	trap.radius = skill.radius
+	trap.radius = hero.trap_radius()
 	trap.root_ticks = int(skill.root_time * TICK_RATE)
 	trap.visible_ticks = int(skill.sprung_visible_time * TICK_RATE)
 	trap.trigger_tick = tick + int(skill.delay * TICK_RATE)
@@ -363,7 +361,7 @@ func _arrow_hit(shooter: HeroState, victim: HeroState) -> void:
 		victim.shielded = false
 		shield_blocked.emit(victim.peer_id, shooter.peer_id)
 		return
-	victim.stunned_until = tick + int(shooter.definition.arrow.stun_time * TICK_RATE)
+	victim.stunned_until = tick + int(shooter.stun_time() * TICK_RATE)
 	victim.stunned = true
 	victim.moving = false
 	_cancel_hook(victim)
@@ -374,12 +372,6 @@ func _update_hook(hero: HeroState, delta: float) -> void:
 	var skill := hero.definition.hook
 	match hero.action:
 		HeroState.Action.CASTING:
-			if not hero.hook_held:
-				_feint(hero)
-				return
-			if hero.hook_aim != Vector2.ZERO:
-				hero.hook_direction = hero.hook_aim.normalized()
-				hero.facing = atan2(hero.hook_direction.x, hero.hook_direction.y)
 			if tick - hero.action_tick >= int(skill.release_time * TICK_RATE):
 				hero.hook_origin = hero.position + hero.hook_direction * skill.origin_offset
 				hero.hook_head = hero.hook_origin
@@ -542,9 +534,10 @@ func _spawn_powerups() -> void:
 	orb.id = _next_powerup_id
 	_next_powerup_id += 1
 	orb.kind = _rng.randi_range(0, PowerUpState.Kind.size() - 1) as PowerUpState.Kind
+	var lane_half_length := arena.play_area.size.y * 0.5 * rules.powerup_lane_fraction
 	orb.position = Vector2(
 		_rng.randf_range(-rules.powerup_lane_half_width, rules.powerup_lane_half_width),
-		_rng.randf_range(-rules.powerup_lane_half_length, rules.powerup_lane_half_length),
+		_rng.randf_range(-lane_half_length, lane_half_length),
 	)
 	powerups[orb.id] = orb
 

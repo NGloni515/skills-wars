@@ -11,6 +11,7 @@ const TURN_SMOOTHING := 18.0
 const SNAP_DISTANCE := 2.5
 const SPAWN_ANIMATION_MSEC := 600
 const PREDICTED_CAST_GRACE_MSEC := 500
+const TRAP_MODEL_SCALE_PER_METER := 0.72
 const NAME_TAG_HEIGHT := 2.75
 const CHEST_HEIGHT := 1.2
 const RIPPLE_INTERVAL_MSEC := 140
@@ -205,7 +206,10 @@ func _update_presenter(presenter: Presenter, hero: HeroState, delta: float) -> v
 	else:
 		visual.position = visual.position.lerp(target, 1.0 - exp(-LOCAL_SMOOTHING * delta))
 	var facing := hero.facing
-	if is_local and match_controller.is_winding_up() and match_controller.hook_aim != Vector2.ZERO:
+	if is_local and match_controller.is_winding_up():
+		var aim := match_controller.cast_direction
+		facing = atan2(aim.x, aim.y)
+	elif is_local and match_controller.hook_aim != Vector2.ZERO:
 		var aim := match_controller.hook_aim
 		facing = atan2(aim.x, aim.y)
 	elif is_local and arrow_button.is_aiming() and match_controller.can_shoot_arrow():
@@ -473,7 +477,7 @@ func _update_traps() -> void:
 		if visual == null:
 			visual = TrapVisual.new()
 			add_child(visual)
-			visual.setup(trap.radius, TAG_COLORS[trap.team], 1.3)
+			visual.setup(trap.radius, TAG_COLORS[trap.team], trap.radius * TRAP_MODEL_SCALE_PER_METER)
 			visual.position = Vector3(trap.position.x, 0.02, trap.position.y)
 			visual.total_ticks = maxf(1.0, trap.trigger_tick - now_tick)
 			_traps[trap.id] = visual
@@ -512,16 +516,14 @@ func _update_aim_line() -> void:
 	if trap_aiming:
 		var target := match_controller.trap_target_for(trap_button.aim_vector())
 		_trap_marker.global_position = Vector3(target.x, 0.06, target.y)
-		_trap_marker.scale = Vector3.ONE * match_controller.local_hero.definition.trap.radius * 2.5
+		_trap_marker.scale = Vector3.ONE * match_controller.local_hero.trap_radius() * 2.5
 	var presenter: Presenter = _presenters.get(match_controller.local_id)
-	var hook_aiming := presenter != null and match_controller.is_winding_up()
+	var hook_aiming := presenter != null and (match_controller.is_winding_up() or match_controller.hook_aim != Vector2.ZERO)
 	var arrow_aiming := presenter != null and arrow_button.is_aiming() and match_controller.can_shoot_arrow()
 	aim_line.visible = hook_aiming
 	arrow_aim_line.visible = arrow_aiming
 	if hook_aiming:
-		var hook_aim := match_controller.hook_aim
-		if hook_aim == Vector2.ZERO:
-			hook_aim = Vector2(sin(presenter.visual.rotation.y), cos(presenter.visual.rotation.y))
+		var hook_aim := match_controller.cast_direction if match_controller.is_winding_up() else match_controller.hook_aim
 		_place_aim_line(aim_line, presenter, hook_aim, match_controller.local_hero.hook_range())
 	if arrow_aiming:
 		var aim := arrow_button.aim_direction()

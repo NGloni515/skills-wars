@@ -1,6 +1,8 @@
 .DS_Store
 .godot/
 *.blend1
-/game/build/
+/game/build/*
+!/game/build/.gdignore
 /build/
 /third_party/
+__pycache__/

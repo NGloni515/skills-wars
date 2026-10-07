@@ -26,6 +26,7 @@ var powerups := {}
 var roster := {}
 var ping_ms := -1
 var hook_aim := Vector2.ZERO
+var cast_direction := Vector2.ZERO
 var phase := MatchSimulation.Phase.PLAYING
 var ticks_left := 0
 var winner := -1
@@ -35,8 +36,8 @@ var _seq := 0
 var _unacked: Array = []
 var _queued_arrow := Vector2.ZERO
 var _queued_trap := Vector2.INF
-var _hook_press_pending := false
-var _hook_holding := false
+var _queued_hook := Vector2.ZERO
+var _hook_cancel_pending := false
 var _cast_started_msec := -1
 var _cast_launched := false
 var _lock_until_seq := 0
@@ -56,22 +57,22 @@ func _ready() -> void:
 	arena = Arena.from_map(map)
 	local_id = multiplayer.get_unique_id()
 	if Net.autopilot:
-		_autopilot = BotBrain.new()
+		_autopilot = BotBrain.new(arena)
 	if multiplayer.is_server():
 		_start_server()
 	else:
 		_client_ready.rpc_id(1, 0, Net.player_name)
 
 
-func press_hook() -> void:
+func cast_hook(direction: Vector2) -> void:
 	if not can_fire():
 		return
-	_hook_press_pending = true
-	_hook_holding = true
+	_queued_hook = direction if direction != Vector2.ZERO else Vector2(sin(local_hero.facing), cos(local_hero.facing))
 
 
-func release_hook() -> void:
-	_hook_holding = false
+func cancel_hook() -> void:
+	if is_winding_up():
+		_hook_cancel_pending = true
 
 
 func is_winding_up() -> bool:
@@ -227,7 +228,9 @@ func _start_server() -> void:
 	else:
 		for i in Net.bot_count:
 			simulation.add_bot(HeroRoster.ALL[0])
-	if not multiplayer.multiplayer_peer is OfflineMultiplayerPeer:
+	if not Net.room_code.is_empty():
+		add_child(MatchHeartbeat.new(Net.backend_url, Net.room_code, OS.get_environment("MATCH_SECRET"), _room_stats))
+	elif not multiplayer.multiplayer_peer is OfflineMultiplayerPeer:
 		var discovery := LanDiscovery.new()
 		add_child(discovery)
 		discovery.announce(_announcement)
@@ -236,6 +239,11 @@ func _start_server() -> void:
 func _announcement() -> Dictionary:
 	var host_name := "Dedicated server" if Net.dedicated else "%s's game" % Net.player_name
 	return {"name": host_name, "port": Net.port, "players": simulation.human_count()}
+
+
+func _room_stats() -> Dictionary:
+	var humans := simulation.human_count()
+	return {"humans": humans, "bots": simulation.heroes.size() - humans}
 
 
 func _physics_process(delta: float) -> void:
@@ -249,7 +257,7 @@ func _physics_process(delta: float) -> void:
 			for peer: int in _ready_peers:
 				var team := _team_of(peer)
 				if not by_team.has(team):
-					by_team[team] = simulation.snapshot(team)
+					by_team[team] = SnapshotCodec.encode(simulation.snapshot(team))
 				_receive_snapshot.rpc_id(peer, by_team[team])
 			if not Net.dedicated:
 				_accept_snapshot(simulation.snapshot(_team_of(local_id)))
@@ -268,34 +276,35 @@ func _send_local_input(delta: float) -> void:
 	var arrow := _queued_arrow
 	var trap := _queued_trap
 	_queued_trap = Vector2.INF
-	var pressed := _hook_press_pending
-	var holding := _hook_holding
-	var aim := hook_aim
+	var hook := _queued_hook
+	var cancel := _hook_cancel_pending
 	_queued_arrow = Vector2.ZERO
-	_hook_press_pending = false
+	_queued_hook = Vector2.ZERO
+	_hook_cancel_pending = false
 	if _autopilot:
 		var command: Array = _autopilot.decide(local_hero, remote_heroes.values(), int(estimated_tick()), powerups.values())
 		move = command[0]
-		pressed = pressed or (command[1] & MatchSimulation.HOOK_PRESSED != 0 and can_fire())
-		holding = holding or command[1] & MatchSimulation.HOOK_HELD != 0
-		if command[2] != Vector2.ZERO:
-			aim = command[2]
+		if command[1] & MatchSimulation.HOOK_CAST and hook == Vector2.ZERO and can_fire():
+			hook = command[2]
+		cancel = cancel or (command[1] & MatchSimulation.HOOK_CANCEL != 0 and is_winding_up())
 		if arrow == Vector2.ZERO and can_shoot_arrow():
 			arrow = command[3]
 		if command[1] & MatchSimulation.TRAP_CAST and can_cast_trap():
 			trap = command[4]
 	if phase != MatchSimulation.Phase.PLAYING:
 		move = Vector2.ZERO
-		pressed = false
+		hook = Vector2.ZERO
 		arrow = Vector2.ZERO
 		trap = Vector2.INF
-	if pressed:
+	if hook != Vector2.ZERO:
 		arrow = Vector2.ZERO
 		trap = Vector2.INF
 		_lock_until_seq = _seq
 		_cast_started_msec = Time.get_ticks_msec()
 		_cast_launched = false
-		local_cast_started.emit(aim)
+		cast_direction = hook
+		local_hero.facing = atan2(hook.x, hook.y)
+		local_cast_started.emit(hook)
 	elif arrow != Vector2.ZERO:
 		_lock_until_seq = _seq
 		_predicted_arrow_cooldown_end_msec = Time.get_ticks_msec() + int(local_hero.definition.arrow.cooldown * 1000.0)
@@ -304,20 +313,23 @@ func _send_local_input(delta: float) -> void:
 		trap = Vector2.INF
 	elif trap != Vector2.INF:
 		_lock_until_seq = _seq
-		_predicted_trap_cooldown_end_msec = Time.get_ticks_msec() + int(local_hero.definition.trap.cooldown * 1000.0)
+		_predicted_trap_cooldown_end_msec = Time.get_ticks_msec() + int(local_hero.trap_cooldown() * 1000.0)
 		local_trap_started.emit(trap)
-	_update_local_cast(holding, aim)
+	if cancel:
+		_cast_started_msec = -1
+		local_cast_canceled.emit()
+	_update_local_cast()
 	if _lock_until_seq != 0:
 		move = Vector2.ZERO
-	var flags := (MatchSimulation.HOOK_PRESSED if pressed else 0) | (MatchSimulation.HOOK_HELD if holding else 0)
+	var flags := (MatchSimulation.HOOK_CAST if hook != Vector2.ZERO else 0) | (MatchSimulation.HOOK_CANCEL if cancel else 0)
 	var trap_target := Vector2.ZERO
 	if trap != Vector2.INF:
 		flags |= MatchSimulation.TRAP_CAST
 		trap_target = trap
-	_unacked.append([_seq, move, flags, aim, arrow, trap_target])
+	_unacked.append([_seq, move, flags, hook, arrow, trap_target])
 	MatchSimulation.apply_move(arena, local_hero, move, delta)
 	if simulation:
-		simulation.push_input(local_id, _seq, move, flags, aim, arrow, trap_target)
+		simulation.push_input(local_id, _seq, move, flags, hook, arrow, trap_target)
 		return
 	var packet := []
 	for input: Array in _unacked.slice(-INPUT_REDUNDANCY):
@@ -325,15 +337,9 @@ func _send_local_input(delta: float) -> void:
 	_after_lag(func() -> void: _submit_inputs.rpc_id(1, packet))
 
 
-func _update_local_cast(holding: bool, aim: Vector2) -> void:
+func _update_local_cast() -> void:
 	if not is_winding_up():
 		return
-	if not holding:
-		_cast_started_msec = -1
-		local_cast_canceled.emit()
-		return
-	if aim != Vector2.ZERO:
-		local_hero.facing = atan2(aim.x, aim.y)
 	if Time.get_ticks_msec() - _cast_started_msec >= local_hero.definition.hook.release_time * 1000.0:
 		_cast_launched = true
 		_predicted_cooldown_end_msec = Time.get_ticks_msec() + int(local_hero.hook_cooldown() * 1000.0)
@@ -466,8 +472,8 @@ func _buy(upgrade: int) -> void:
 
 
 @rpc("authority", "call_remote", "unreliable_ordered", 2)
-func _receive_snapshot(snap: Array) -> void:
-	_after_lag(_accept_snapshot.bind(snap))
+func _receive_snapshot(packet: PackedByteArray) -> void:
+	_after_lag(_accept_snapshot.bind(SnapshotCodec.decode(packet)))
 
 
 @rpc("authority", "call_remote", "reliable")

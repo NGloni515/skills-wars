@@ -11,12 +11,20 @@ config_version=5
 [application]
 
 config/name="Skills Wars"
+config/version="0.1.0"
 run/main_scene="res://ui/main_menu.tscn"
+run/flush_stdout_on_print=true
+run/max_fps=60
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.png"
+boot_splash/bg_color=Color(0.06, 0.3, 0.6, 1)
+boot_splash/image="res://splash.png"
+boot_splash/stretch_mode=4
 
 [autoload]
 
+Settings="*res://settings/settings.gd"
+Loading="*res://ui/loading.gd"
 Net="*res://net/net.gd"
 
 [display]

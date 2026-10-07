@@ -9,6 +9,8 @@ var hero_blockers: Array[Vector3] = []
 var hook_blockers: Array[Vector3] = []
 var spawns: Array[Array] = [[], []]
 var bounds := Rect2()
+var play_area := Rect2()
+var river_edge := 0.0
 
 
 static func from_map(map: Node3D) -> Arena:
@@ -18,6 +20,8 @@ static func from_map(map: Node3D) -> Arena:
 			arena._add_shape(shape_node, body.collision_layer)
 	for i in arena.hero_walls.size():
 		arena.bounds = arena.hero_walls[i] if i == 0 else arena.bounds.merge(arena.hero_walls[i])
+	arena.play_area = arena.bounds.grow(-arena._outer_wall_thickness())
+	arena.river_edge = arena._find_river_edge()
 	for team in 2:
 		for marker: Node3D in map.get_tree().get_nodes_in_group("spawn_team_%d" % team):
 			if map.is_ancestor_of(marker):
@@ -56,6 +60,22 @@ static func distance_to_segment(point: Vector2, a: Vector2, b: Vector2) -> float
 	var ab := b - a
 	var t := 0.0 if ab.length_squared() == 0.0 else clampf((point - a).dot(ab) / ab.length_squared(), 0.0, 1.0)
 	return point.distance_to(a + ab * t)
+
+
+func _outer_wall_thickness() -> float:
+	for rect in hero_walls:
+		if is_equal_approx(rect.position.x, bounds.position.x):
+			return rect.size.x
+	return 0.0
+
+
+# The river edges are the long walls inside the play area; the walkable bank starts at their outer face.
+func _find_river_edge() -> float:
+	var edge := 0.0
+	for rect in hero_walls:
+		if rect.size.y >= play_area.size.y * 0.9 and play_area.encloses(rect):
+			edge = maxf(edge, maxf(absf(rect.position.x), absf(rect.end.x)))
+	return edge
 
 
 func _add_shape(shape_node: CollisionShape3D, layer: int) -> void:

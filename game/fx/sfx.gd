@@ -20,6 +20,7 @@ const STREAMS := {
 	&"stun_hit": preload("res://audio/sfx/stun_hit.wav"),
 	&"trap_set": preload("res://audio/sfx/trap_set.wav"),
 	&"trap_snap": preload("res://audio/sfx/trap_snap.wav"),
+	&"level_up": preload("res://audio/sfx/level_up.wav"),
 }
 const PITCH_VARIATION := 0.07
 

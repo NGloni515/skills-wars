@@ -105,15 +105,15 @@ static func shockwave(parent: Node, position: Vector3, color: Color, radius: flo
 	tween.chain().tween_callback(ring.queue_free)
 
 
-static func floating_text(parent: Node, position: Vector3, text: String, color: Color) -> void:
+static func floating_text(parent: Node, position: Vector3, text: String, color: Color, font_size := 40) -> void:
 	var label := Label3D.new()
 	label.text = text
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
 	label.fixed_size = true
 	label.pixel_size = 0.0016
-	label.font_size = 40
-	label.outline_size = 12
+	label.font_size = font_size
+	label.outline_size = roundi(font_size * 0.3)
 	label.modulate = color
 	label.outline_modulate = Color(0.1, 0.06, 0.0)
 	parent.add_child(label)

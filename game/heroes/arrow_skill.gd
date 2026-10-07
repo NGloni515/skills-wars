@@ -7,4 +7,8 @@ extends Resource
 @export var stun_time := 2.0
 @export var cooldown := 20.0
 @export var height := 1.1
-@export var blocked_by_rocks := true
+@export var blocked_by_rocks := false
+
+@export_group("Per upgrade level")
+@export var speed_per_level := 1.5
+@export var stun_time_per_level := 0.2

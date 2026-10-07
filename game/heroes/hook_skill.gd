@@ -1,14 +1,10 @@
 class_name HookSkill
 extends Resource
 
-enum Upgrade { RANGE, SPEED, SIZE, COOLDOWN }
-
-const UPGRADE_NAMES: Array[String] = ["Range", "Speed", "Size", "Cooldown"]
-
-@export var release_time := 0.6
+@export var release_time := 0.7
 @export var speed := 24.0
 @export var return_speed := 26.0
-@export var max_range := 20.5
+@export var max_range := 16.0
 @export var hit_radius := 0.35
 @export var cooldown := 10.0
 @export var origin_offset := 0.7

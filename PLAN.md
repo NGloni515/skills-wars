@@ -19,16 +19,18 @@ published on the App Store and Google Play.
   - Rock hit → hook returns. Two hooks collide → both return.
 - **Stun arrow (second skill, Mirana-style):** a 0.2 s throw sends a slow bolt (15.5 m/s, like Mirana's) across the whole map; the first enemy it
   touches is stunned for 2 s (can't move, hook or shoot, and any throw in progress is cancelled). It passes through
-  allies, rocks block it, a Shield absorbs it, 20 s cooldown. Stun + hook is the core combo.
+  allies and rocks, a Shield absorbs it, 20 s cooldown. Stun + hook is the core combo.
 - **Bear trap (third skill, Sun Strike-style):** drag TRAP to target any point on the map (short drag = near, full
   drag = far). A 0.5 s casting animation that everyone sees, then the trap arms for 1.7 s — visible only to the
   caster's team (the server doesn't send it to enemies) — then snaps shut, visible to all, rooting every enemy inside
-  (~1.8 m radius) for 2.5 s: they can't move but can still throw. Allies are never caught; a Shield absorbs it;
+  (2.34 m radius) for 2.5 s: they can't move but can still throw. Allies are never caught; a Shield absorbs it;
   25 s cooldown. Enemies react to the casting animation by moving; bots do the same.
-- **Hesi hook:** touching HOOK starts a 0.6 s wind-up (aim by dragging during it); still holding at the end → the
-  hook launches and the 10 s cooldown starts. Letting go earlier cancels the throw (hesi): no hook, cooldown stays
-  ready, a Big Hook is kept. Faking throws to bait dodges is part of the skill; bots fake ~15% of their throws.
-- **Reach and cooldown:** the hook reaches from your river edge to the enemy's back wall (20.5 m), so nobody can
+- **Throwing and hesi:** drag the HOOK button to aim (you can keep walking while you aim) and release to throw.
+  Gaff then winds up for 0.7 s in place (no walking) and the hook launches; the 10 s cooldown starts at launch.
+  Tapping HOOK again during the wind-up cancels the throw (hesi): no hook, cooldown stays ready, a Big Hook is kept.
+  A quick tap without dragging throws straight ahead. Faking throws to bait dodges is part of the skill; bots fake
+  ~15% of their throws.
+- **Reach and cooldown:** the hook reaches from your river edge to the enemy's back wall (16 m), so nobody can
   hide out of range. It has a 10 s cooldown that starts on the throw; the HOOK button shows the countdown.
 - **Commitment:** the hero can't move from wind-up until the hook is back (tunable). Missing leaves you exposed.
 - **Economy:** gold from kills and assists buys in-match upgrades — hook range, speed, size, cooldown (5 levels each).
@@ -86,9 +88,9 @@ Online:  Phone ──UDP (ENet)──> Match server (Godot headless, authoritati
 LAN:     One phone hosts (server + player), others on the same Wi-Fi join directly
 ```
 
-- **Server decides everything** at 30 ticks/s. Phones send inputs only (move vector, hook aim/fire).
+- **Server decides everything** at 60 ticks/s. Phones send inputs only (move vector, hook aim/fire).
 - **Own movement predicted** on the phone; other heroes interpolated (~100 ms).
-- **Hook hits decided only on the server.** The 0.3 s wind-up plays instantly on the phone and hides latency.
+- **Hook hits decided only on the server.** The 0.7 s wind-up plays instantly on the phone and hides latency.
   Because every hit kills, hit fairness under lag is tested first (Phase 1).
 - **LAN discovery:** host broadcasts on the local network; QR code / IP join as fallback.
   iOS needs the Local Network permission and Apple's multicast entitlement (request early).
@@ -103,7 +105,7 @@ LAN:     One phone hosts (server + player), others on the same Wi-Fi join direct
 | **0. Setup** ✅ done (iOS needs Xcode 26) | Godot project, placeholder Gaff, greybox river map, joystick + hook button, local hook demo, phone builds | The sandbox runs on your phone |
 | **1. Networked basics** 🟡 mostly done | Server-authoritative movement + hook; hero/skill definitions; LAN and online by IP (server on a small VPS) | Two phones hook each other on Wi-Fi and over the internet, and it feels fair at 150 ms simulated lag |
 | **2. Full match** 🟡 mostly done | Teams, one-hit kills, respawn, score, gold + shop upgrades, LAN discovery, HUD | Full 3v3 LAN match from lobby to victory screen |
-| **3. Online services** | NestJS backend, guest accounts, rooms by code, then quick match | Friends in different cities play via a code |
+| **3. Online services** 🟡 started | NestJS backend, guest accounts, rooms by code, then quick match | Friends in different cities play via a code |
 | **4. Final Gaff + feel** 🟡 started | Final model/animations, VFX, sound, haptics | The hook feels great to land |
 | **5. Content** 🟡 started | River power-ups, items, bots, tutorial, progression, cosmetics, **second hero and map** | Ready for players outside your circle |
 | **6. Launch** | TestFlight / Play testing, analytics, crash reports, store pages, privacy policy | Soft launch in 1–2 countries |
@@ -136,10 +138,42 @@ LAN:     One phone hosts (server + player), others on the same Wi-Fi join direct
   8 s between matches), victory/defeat screen and automatic next match, player names (saved) with name tags and a
   kill feed, gold (100 per kill + 5 per second) and a shop with 5 levels of Range, Speed, Size and Cooldown, bots
   that fill empty slots and step aside for players, games on the same Wi-Fi listed automatically in the menu.
+- Done: smaller map. The play area is 28.8 x 24 m (was 36 x 30) and the river is 4.9 m wide (was 7 m). Hook reach
+  shrank to 16 m so it still ends at the enemy's back wall; the trap reaches 27.2 m. The map scene is generated from
+  `tools/blender/river_arena_shape.py`, and bots, power-ups and tests read the river edge and play area from the map.
+- Done: new hook controls (aim while walking, release to cast a 0.7 s wind-up, tap again to cancel) and skill icons
+  on the HOOK / ARROW / TRAP buttons and shop tabs.
+- Done: shop redesign. A compact strip under the score (your hero, joystick and skill buttons stay usable) with
+  Hook / Arrow / Trap tabs and 8 upgrades of 5 levels each (hook range, speed, size, cooldown; arrow speed, stun
+  time; trap size, cooldown). Each card shows its icon, level, "now → next" value and price, and lights up when
+  affordable. Quick buy next to Shop buys the starred upgrade (or the least upgraded one) in one tap. The Shop and
+  Quick buy buttons pulse when you can afford something; buying plays a level-up sound with sparkles and
+  "+Hook range" over your hero. Tapping the right half of the screen closes the shop; the left half stays the joystick.
 - Left: a pre-match lobby if drop-in play feels too chaotic; tune gold, prices and upgrade strength in playtests;
   iOS needs Apple's multicast entitlement before Wi-Fi discovery works there (joining by address works without it).
 
+**Phase 3 — started (online services)**
+- Done: NestJS backend (`backend/`) with quick play, private rooms with a 4-letter code, and joining by code. Each
+  room is its own headless Godot match server on a UDP port from a pool (7800–7819 by default). Match servers send a
+  heartbeat every 5 s with player counts. Rooms empty for 90 s or silent for 20 s are closed, and match servers quit
+  on their own if the backend forgets them or stays unreachable for 60 s. Validated config, rate limits, `/health`,
+  graceful shutdown, unit + e2e tests. The menu has a Play online section and the room code shows in the HUD.
+  Snapshots are now packed into a compact binary format (about 660 bytes for a full 3v3, down from about 1.9 KB),
+  so each one fits in a single internet packet.
+  Docker image + compose file in `deploy/` (tested locally: two clients quick-matched into a room inside Docker).
+- Done: version checks. The game has a network protocol number (`Net.PROTOCOL`). The backend reads it from its match
+  server build at startup and turns away other versions with "update the game" / "servers are being updated", and a
+  connection handshake does the same for Wi-Fi and join-by-address games.
+- Done: name filter (English and Spanish insults, lookalike letters like `sh1t`, stretched letters, words glued
+  together) applied on the server and while typing; blocked names show as "Player".
+- Left: rent a VPS and deploy, HTTPS in front of the backend, set the production server URL in the game, guest
+  accounts and a database, one-time join tickets so only matched players can enter a room, more regions.
+
 **Phase 4 — started (game feel)**
+- Done: loading pages. A branded launch screen (Gaff's icon and the title, `game/splash.png`), a loading page with a
+  progress bar and gameplay tips while a match loads in the background (it stays up until your hero is in the match),
+  and a connecting page with Cancel for online and Wi-Fi joins.
+- Done: Settings panel in the menu and in matches (sound and vibration on/off, version shown), 60 FPS cap.
 - Done: impact burst + shockwave and screen shake on catches, sparks and clank when a hook hits a rock, splashes and
   ripples while bodies are dragged through the river, smoke puff on death, team-colored sparkles on respawn, running
   dust, floating "+100" gold, phone vibration (being hooked, hooking someone, buying), and generated placeholder

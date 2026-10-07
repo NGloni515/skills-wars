@@ -1,0 +1,148 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://ui/loading_screen.gd" id="1_loading"]
+[ext_resource type="Texture2D" path="res://fx/textures/skill_hook.png" id="2_hook"]
+
+[sub_resource type="Gradient" id="Gradient_bg"]
+colors = PackedColorArray(0.25, 0.74, 0.93, 1, 0.06, 0.3, 0.6, 1)
+
+[sub_resource type="GradientTexture2D" id="Texture_bg"]
+gradient = SubResource("Gradient_bg")
+fill = 1
+fill_from = Vector2(0.5, 0.3)
+fill_to = Vector2(1.1, 1.1)
+
+[sub_resource type="LabelSettings" id="Label_title"]
+font_size = 76
+outline_size = 18
+outline_color = Color(0.05, 0.1, 0.25, 1)
+
+[sub_resource type="LabelSettings" id="Label_status"]
+font_size = 28
+outline_size = 8
+outline_color = Color(0.05, 0.1, 0.25, 1)
+
+[sub_resource type="LabelSettings" id="Label_tip"]
+font_size = 22
+font_color = Color(1, 0.9, 0.55, 1)
+outline_size = 6
+outline_color = Color(0.05, 0.1, 0.25, 1)
+
+[sub_resource type="StyleBoxFlat" id="Style_bar_bg"]
+bg_color = Color(0.04, 0.1, 0.22, 0.6)
+corner_radius_top_left = 11
+corner_radius_top_right = 11
+corner_radius_bottom_right = 11
+corner_radius_bottom_left = 11
+
+[sub_resource type="StyleBoxFlat" id="Style_bar_fill"]
+bg_color = Color(0.98, 0.78, 0.25, 1)
+corner_radius_top_left = 11
+corner_radius_top_right = 11
+corner_radius_bottom_right = 11
+corner_radius_bottom_left = 11
+
+[sub_resource type="StyleBoxFlat" id="Style_cancel"]
+bg_color = Color(0.04, 0.1, 0.22, 0.55)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+content_margin_left = 28.0
+content_margin_right = 28.0
+
+[node name="LoadingScreen" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_loading")
+
+[node name="Root" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="TextureRect" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("Texture_bg")
+expand_mode = 1
+
+[node name="Center" type="VBoxContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -190.0
+offset_right = 300.0
+offset_bottom = 190.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="Title" type="Label" parent="Root/Center"]
+layout_mode = 2
+text = "SKILLS WARS"
+label_settings = SubResource("Label_title")
+horizontal_alignment = 1
+
+[node name="Spinner" type="TextureRect" parent="Root/Center"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(88, 88)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("2_hook")
+expand_mode = 1
+stretch_mode = 5
+pivot_offset = Vector2(44, 44)
+
+[node name="Status" type="Label" parent="Root/Center"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Loading…"
+label_settings = SubResource("Label_status")
+horizontal_alignment = 1
+
+[node name="Bar" type="ProgressBar" parent="Root/Center"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(480, 22)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/background = SubResource("Style_bar_bg")
+theme_override_styles/fill = SubResource("Style_bar_fill")
+show_percentage = false
+
+[node name="Cancel" type="Button" parent="Root/Center"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("Style_cancel")
+text = "Cancel"
+
+[node name="Tip" type="Label" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 80.0
+offset_top = -96.0
+offset_right = -80.0
+offset_bottom = -36.0
+grow_horizontal = 2
+grow_vertical = 0
+label_settings = SubResource("Label_tip")
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3

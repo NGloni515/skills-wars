@@ -14,7 +14,7 @@ extends Resource
 @export var powerup_interval := 12.0
 @export var max_powerups := 2
 @export var powerup_lane_half_width := 0.8
-@export var powerup_lane_half_length := 12.0
+@export var powerup_lane_fraction := 0.8
 @export var powerup_radius := 0.55
 @export var shield_time := 15.0
 @export var haste_time := 8.0

@@ -2,7 +2,7 @@
 extends Node3D
 
 @export var terrain_material: Material
-@export var water_half_width := 2.9
+@export var water_half_width := 2.03
 @export var water_level := -0.3
 
 

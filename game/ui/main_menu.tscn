@@ -1,6 +1,7 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://ui/main_menu.gd" id="1_menu"]
+[ext_resource type="PackedScene" path="res://ui/settings_panel.tscn" id="2_settings"]
 
 [sub_resource type="Gradient" id="Gradient_bg"]
 colors = PackedColorArray(0.25, 0.74, 0.93, 1, 0.06, 0.3, 0.6, 1)
@@ -77,26 +78,52 @@ placeholder_text = "Your name"
 max_length = 16
 alignment = 1
 
+[node name="OnlineTitle" type="Label" parent="Center/Columns/Main"]
+layout_mode = 2
+text = "Play online"
+label_settings = SubResource("Label_section")
+
+[node name="QuickPlay" type="Button" parent="Center/Columns/Main"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(440, 76)
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Quick play"
+
+[node name="RoomRow" type="HBoxContainer" parent="Center/Columns/Main"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="CreateRoom" type="Button" parent="Center/Columns/Main/RoomRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(190, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Create room"
+
+[node name="RoomCode" type="LineEdit" parent="Center/Columns/Main/RoomRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 26
+placeholder_text = "CODE"
+alignment = 1
+max_length = 4
+
+[node name="JoinRoom" type="Button" parent="Center/Columns/Main/RoomRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Join"
+
 [node name="Practice" type="Button" parent="Center/Columns/Main"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(440, 70)
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "Practice vs bots"
-
-[node name="Host" type="Button" parent="Center/Columns/Main"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(440, 70)
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "Host a game"
-
-[node name="FillBots" type="CheckBox" parent="Center/Columns/Main"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-button_pressed = true
-text = "Fill empty slots with bots"
 
 [node name="Status" type="Label" parent="Center/Columns/Main"]
 unique_name_in_owner = true
@@ -127,6 +154,24 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 8
 
+[node name="HostRow" type="HBoxContainer" parent="Center/Columns/Join"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Host" type="Button" parent="Center/Columns/Join/HostRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Host a game"
+
+[node name="FillBots" type="CheckBox" parent="Center/Columns/Join/HostRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+button_pressed = true
+text = "Fill with bots"
+
 [node name="ManualTitle" type="Label" parent="Center/Columns/Join"]
 layout_mode = 2
 text = "Join by address"
@@ -151,3 +196,34 @@ custom_minimum_size = Vector2(120, 64)
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "Join"
+
+[node name="ServerTitle" type="Label" parent="Center/Columns/Join"]
+layout_mode = 2
+text = "Online server"
+label_settings = SubResource("Label_section")
+
+[node name="BackendUrl" type="LineEdit" parent="Center/Columns/Join"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+placeholder_text = "http://127.0.0.1:3000"
+virtual_keyboard_type = 7
+
+[node name="Settings" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -164.0
+offset_top = 20.0
+offset_right = -24.0
+offset_bottom = 72.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 22
+text = "Settings"
+
+[node name="SettingsPanel" parent="." instance=ExtResource("2_settings")]
+unique_name_in_owner = true
+layout_mode = 1

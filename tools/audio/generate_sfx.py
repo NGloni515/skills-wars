@@ -168,6 +168,13 @@ def powerup():
     return chime + shimmer
 
 
+def level_up():
+    chime = arpeggio([392.0, 523.25, 659.25, 783.99, 1046.5], 0.045, 0.45, shape="square", vibrato=0.003)
+    t = timeline(len(chime) / RATE)
+    sparkle = bandpass(noise(len(t)), 8500, 4.0) * envelope(t, 0.2, 0.25) * 0.35
+    return chime * 0.8 + sparkle
+
+
 def shield_pop():
     t = timeline(0.3)
     pop = tone(t, 300 + 1400 * np.clip(t / 0.05, 0, 1)) * envelope(t, 0.002, 0.04)
@@ -221,7 +228,7 @@ SOUNDS = {
     "coin": (coin, 0.45), "victory": (victory, 0.6), "defeat": (defeat, 0.6), "kill_ding": (kill_ding, 0.5),
     "ui_click": (ui_click, 0.35), "powerup": (powerup, 0.55), "shield_pop": (shield_pop, 0.65),
     "arrow_shot": (arrow_shot, 0.6), "stun_hit": (stun_hit, 0.65),
-    "trap_set": (trap_set, 0.6), "trap_snap": (trap_snap, 0.8),
+    "trap_set": (trap_set, 0.6), "trap_snap": (trap_snap, 0.8), "level_up": (level_up, 0.5),
 }
 
 
